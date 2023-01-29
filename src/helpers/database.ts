@@ -1,11 +1,12 @@
 import { FirebaseApp, initializeApp } from 'firebase/app';
-import { child, Database, get, getDatabase, ref, set } from 'firebase/database';
+import { child, Database, get, getDatabase, onChildAdded, ref, set } from 'firebase/database';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { conf } from '../../config.js';
 
 class DatabaseService {
   app: FirebaseApp
   db: Database
+  initSkip = true
 
   constructor() {
     try{
@@ -36,7 +37,29 @@ class DatabaseService {
     })
   }
   //добавление слушателя оповещений
+  setUserListener(user: User): Promise<void> {
+    return new Promise((resolve, reject) => {
+      set(ref(this.db, 'users' + user.id), user)
+        .then(() => resolve())
+        .catch(err => reject(err))
+    })
+  }
   //подписка на обновления объявлений
+  async updateAds(cb): Promise<void> {
+    onChildAdded(ref(this.db, 'ads'), (snapshot) => {
+      const data: Collection<Ad> = snapshot.val();
+
+      //при первом запуске выводятся уже добавленные в БД поля
+      //их пропускаем и следим только за новыми
+      setTimeout(() => {
+        this.initSkip = false;
+      })
+      if(this.initSkip) {
+        return;
+      }
+      cb(data);
+    })
+  }
 
 }
 
@@ -52,4 +75,12 @@ export interface User {
   is_bot: boolean,
   firstname: string,
   username: string
+}
+
+export interface Ad {
+  title: string,
+  owner: string,
+  id: string,
+  price: string,
+  url: string
 }
