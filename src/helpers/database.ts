@@ -39,7 +39,7 @@ class DatabaseService {
   //добавление слушателя оповещений
   setUserListener(user: User): Promise<void> {
     return new Promise((resolve, reject) => {
-      set(ref(this.db, 'users' + user.id), user)
+      set(ref(this.db, 'users/' + user.id), user)
         .then(() => resolve())
         .catch(err => reject(err))
     })
