@@ -1,6 +1,6 @@
 import { conf } from '../config.js';
 import { Scenes, Telegraf } from 'telegraf';
-import db, { User } from './helpers/database.js'
+import db, { Ad, User } from './helpers/database.js'
 import { pause } from './helpers/utils.js'
 import logger from './helpers/logger.js'
 import { Logger } from 'log4js';
@@ -17,13 +17,27 @@ const bot = new Telegraf<Scenes.SceneContext>(conf.botToken);
 
   bot.on('text', async (ctx) => {
     const {from} = ctx.update.message;
+    _logger.info(`Мне написал пользователь ${from.id} ${from.username}`);
     await db.setUserListener(from as unknown as User);
     ctx.reply('Приветствую! Вы добавлены в рассылку');
+    _logger.info(`Добавил пользователя ${from.id} ${from.username} в рассылку`);
     users = await db.getUsers();
     usersIds = users ? Object.keys(users) : [];
-    console.log(usersIds);
-    _logger.info('add user')
+    _logger.info('Обновил список юзеров для рассылки');
   })
+
+  function notifyUser(data: Ad): void {
+    _logger.info('Произошло обновление списка объявлений');
+    const text = `Появилось новое объявление: ${data.title}, цена ${data.price}!
+Ссылка: https://krisha.kz${data.url}`;
+
+    for (const id of usersIds) {
+      bot.telegram.sendMessage(id, text);
+      _logger.info(`Выслал оповещение пользователю ${id}`);
+    }
+
+  }
+  db.updateAds(notifyUser);
 
   bot.launch();
 })()
