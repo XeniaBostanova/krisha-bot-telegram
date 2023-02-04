@@ -28,7 +28,7 @@ const bot = new Telegraf<Scenes.SceneContext>(conf.botToken);
 
   function notifyUser(data: Ad): void {
     _logger.info('Произошло обновление списка объявлений');
-    const text = `Появилось новое объявление: ${data.title}, цена ${data.price}!
+    const text = `Появилось новое объявление: ${data.title}, цена ${data.price}, ЖК: ${data.address}!
 Ссылка: https://krisha.kz${data.url}`;
 
     for (const id of usersIds) {

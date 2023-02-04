@@ -6,7 +6,8 @@ import { conf } from '../../config.js';
 class DatabaseService {
   app: FirebaseApp
   db: Database
-  initSkip = true
+  initSkip = {}
+  unsubscribers = []
 
   constructor() {
     try{
@@ -44,20 +45,53 @@ class DatabaseService {
         .catch(err => reject(err))
     })
   }
-  //подписка на обновления объявлений
-  async updateAds(cb): Promise<void> {
-    onChildAdded(ref(this.db, 'ads'), (snapshot) => {
+  //подписка на обновления объявлений одного треда
+  async updateAdsThread(key: string, callback): Promise<void> {
+    this.initSkip[key] = true;
+    const unsubscriber = onChildAdded(ref(this.db, 'ads/' + key), (snapshot) => {
       const data: Collection<Ad> = snapshot.val();
+
+      console.log('updateAdsThread', key);
 
       //при первом запуске выводятся уже добавленные в БД поля
       //их пропускаем и следим только за новыми
       setTimeout(() => {
-        this.initSkip = false;
+        this.initSkip[key] = false;
       })
-      if(this.initSkip) {
+      if(this.initSkip[key]) {
         return;
       }
-      cb(data);
+      callback(data);
+    })
+    this.unsubscribers.push(unsubscriber);
+  }
+
+  //получение списка тредов (типов объявлений)
+  getAllAdsThread(): Promise<string[]> {
+    return new Promise((resolve, reject) => {
+      this.unsubscribers.forEach((unsubscriber) => unsubscriber());
+      get(child(ref(this.db), 'ads'))
+        .then((snapshot) => {
+          const val = snapshot.val();
+          return resolve(Object.keys(val));
+        })
+        .catch(err => reject(err))
+    })
+  }
+
+  async updateAds(callback): Promise<void> {
+
+    //подписка на список тредов и при его изменнии перезапрашивать его
+    onChildAdded(ref(this.db, 'ads'),async () => {
+      const keys = await this.getAllAdsThread();
+
+      for (const key of keys) {
+        console.log(key);
+
+        //вызов подписки на каждый тред
+        this.updateAdsThread(key, callback);
+
+      }
     })
   }
 
@@ -79,6 +113,7 @@ export interface User {
 
 export interface Ad {
   title: string,
+  address: string,
   owner: string,
   id: string,
   price: string,
