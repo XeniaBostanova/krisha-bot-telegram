@@ -25,11 +25,11 @@ bot.help((ctx) => ctx.reply(commands));
     if (text === '/start') {
       _logger.info(`Мне написал пользователь ${from.id} ${from.username}`);
       await db.setUserListener(from as unknown as User);
-      ctx.reply(`Приветствую, ${from.username}! Я буду присылать варианты хаток для вас!`);
       _logger.info(`Добавил пользователя ${from.id} ${from.username} в рассылку`);
       users = await db.getUsers();
       usersIds = users ? Object.keys(users) : [];
       _logger.info('Обновил список юзеров для рассылки');
+      return ctx.reply(`Приветствую, ${from.username}! Я буду присылать варианты хаток для вас!`);
     }
 
     if (text === '/info') {
@@ -37,7 +37,7 @@ bot.help((ctx) => ctx.reply(commands));
     }
 
     if (text === '/adsdb') {
-      const ads = await db.getAllAdsThread(); // fetch the ads from the database
+      const ads = await db.getAdsDb(); // fetch the ads from the database
       if (!ads || !ads.length) return ctx.reply("Объявлений в базе нет");
       let reply = "На данный момент в базе следующие объявления: \n";
       ads.forEach((ad, index) => reply += `${index + 1}. https://krisha.kz/a/show/${ad}\n`);
