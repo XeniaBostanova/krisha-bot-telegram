@@ -86,7 +86,7 @@ class DatabaseService {
       const keys = await this.getAllAdsThread();
 
       for (const key of keys) {
-        console.log(key);
+        console.log('key', key);
 
         //вызов подписки на каждый тред
         this.updateAdsThread(key, callback);
