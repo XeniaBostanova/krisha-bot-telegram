@@ -37,8 +37,11 @@ bot.help((ctx) => ctx.reply(commands));
     }
 
     if (text === '/adsdb') {
-      ctx.reply(`На данный момент в базе следующие объявления: `);
-      return db.getAllAdsThread(); //не присылает объявления!!!!!!!!
+      const ads = await db.getAllAdsThread(); // fetch the ads from the database
+      if (!ads || !ads.length) return ctx.reply("Объявлений в базе нет");
+      let reply = "На данный момент в базе следующие объявления: \n";
+      ads.forEach((ad, index) => reply += `${index + 1}. https://krisha.kz/a/show/${ad}\n`);
+      return ctx.reply(reply);
     }
     return ctx.reply(`⬇ Выбери команду из списка или просто жди оповещений о новых объявлениях 🙂`);
   })

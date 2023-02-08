@@ -70,7 +70,7 @@ class DatabaseService {
   getAllAdsThread(): Promise<string[]> {
     return new Promise((resolve, reject) => {
       this.unsubscribers.forEach((unsubscriber) => unsubscriber());
-      get(child(ref(this.db), 'ads'))
+      get(child(ref(this.db), 'ads/' + 'qwert'))
         .then((snapshot) => {
           const val = snapshot.val();
           return resolve(Object.keys(val));
